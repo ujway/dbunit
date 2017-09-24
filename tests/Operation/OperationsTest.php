@@ -110,6 +110,15 @@ class Extensions_Database_Operation_OperationsTest extends TestCase
         $this->assertDataSetsEqual(new FlatXmlDataSet(dirname(__FILE__) . '/../_files/XmlDataSets/InsertOperationResult.xml'), $this->getConnection()->createDataSet());
     }
 
+    public function testBulkInsert()
+    {
+        $bulkInsertOperation = new BulkInsert();
+
+        $bulkInsertOperation->execute($this->getConnection(), new FlatXmlDataSet(dirname(__FILE__) . '/../_files/XmlDataSets/InsertOperationTest.xml'));
+
+        $this->assertDataSetsEqual(new FlatXmlDataSet(dirname(__FILE__) . '/../_files/XmlDataSets/InsertOperationResult.xml'), $this->getConnection()->createDataSet());
+    }
+
     public function testUpdate()
     {
         $updateOperation = new Update();
