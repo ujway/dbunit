@@ -37,7 +37,7 @@ class Factory
     {
         return new Composite([
             self::TRUNCATE($cascadeTruncates),
-            self::INSERT()
+            self::BULKINSERT()
         ]);
     }
 
@@ -49,6 +49,16 @@ class Factory
     public static function INSERT()
     {
         return new Insert();
+    }
+
+    /**
+     * Returns an insert(bulk) database operation.
+     *
+     * @return Operation
+     */
+    public static function BULKINSERT()
+    {
+        return new BulkInsert();
     }
 
     /**
