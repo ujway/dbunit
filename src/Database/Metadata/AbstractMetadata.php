@@ -21,14 +21,14 @@ use ReflectionClass;
 abstract class AbstractMetadata implements Metadata
 {
     protected static $metaDataClassMap = [
-        'pgsql' => PgSQL::class,
-        'mysql' => MySQL::class,
-        'oci' => Oci::class,
-        'sqlite' => Sqlite::class,
-        'sqlite2' => Sqlite::class,
-        'sqlsrv' => SqlSrv::class,
+        'pgsql'    => PgSQL::class,
+        'mysql'    => MySQL::class,
+        'oci'      => Oci::class,
+        'sqlite'   => Sqlite::class,
+        'sqlite2'  => Sqlite::class,
+        'sqlsrv'   => SqlSrv::class,
         'firebird' => Firebird::class,
-        'dblib' => Dblib::class
+        'dblib'    => Dblib::class
     ];
 
     /**
@@ -64,7 +64,7 @@ abstract class AbstractMetadata implements Metadata
      */
     final public function __construct(PDO $pdo, $schema = '')
     {
-        $this->pdo = $pdo;
+        $this->pdo    = $pdo;
         $this->schema = $schema;
     }
 
@@ -85,12 +85,12 @@ abstract class AbstractMetadata implements Metadata
 
             if ($className instanceof ReflectionClass) {
                 return $className->newInstance($pdo, $schema);
-            } else {
-                return self::registerClassWithDriver($className, $driverName)->newInstance($pdo, $schema);
             }
-        } else {
-            throw new RuntimeException("Could not find a meta data driver for {$driverName} pdo driver.");
+
+            return self::registerClassWithDriver($className, $driverName)->newInstance($pdo, $schema);
         }
+
+        throw new RuntimeException("Could not find a meta data driver for {$driverName} pdo driver.");
     }
 
     /**
@@ -108,16 +108,16 @@ abstract class AbstractMetadata implements Metadata
      */
     public static function registerClassWithDriver($className, $pdoDriver)
     {
-        if (!class_exists($className)) {
+        if (!\class_exists($className)) {
             throw new RuntimeException("Specified class for {$pdoDriver} driver ({$className}) does not exist.");
         }
 
         $reflection = new ReflectionClass($className);
         if ($reflection->isSubclassOf(self::class)) {
             return self::$metaDataClassMap[$pdoDriver] = $reflection;
-        } else {
-            throw new RuntimeException("Specified class for {$pdoDriver} driver ({$className}) does not extend PHPUnit_Extensions_Database_DB_MetaData.");
         }
+
+        throw new RuntimeException("Specified class for {$pdoDriver} driver ({$className}) does not extend PHPUnit_Extensions_Database_DB_MetaData.");
     }
 
     /**
@@ -139,16 +139,16 @@ abstract class AbstractMetadata implements Metadata
      */
     public function quoteSchemaObject($object)
     {
-        $parts = explode('.', $object);
+        $parts       = \explode('.', $object);
         $quotedParts = [];
 
         foreach ($parts as $part) {
             $quotedParts[] = $this->schemaObjectQuoteChar .
-                str_replace($this->schemaObjectQuoteChar, $this->schemaObjectQuoteChar . $this->schemaObjectQuoteChar, $part) .
+                \str_replace($this->schemaObjectQuoteChar, $this->schemaObjectQuoteChar . $this->schemaObjectQuoteChar, $part) .
                 $this->schemaObjectQuoteChar;
         }
 
-        return implode('.', $quotedParts);
+        return \implode('.', $quotedParts);
     }
 
     /**
@@ -162,17 +162,17 @@ abstract class AbstractMetadata implements Metadata
      */
     public function splitTableName($fullTableName)
     {
-        if (($dot = strpos($fullTableName, '.')) !== false) {
+        if (($dot = \strpos($fullTableName, '.')) !== false) {
             return [
-                'schema' => substr($fullTableName, 0, $dot),
-                'table' => substr($fullTableName, $dot + 1)
-            ];
-        } else {
-            return [
-                'schema' => null,
-                'table' => $fullTableName
+                'schema' => \substr($fullTableName, 0, $dot),
+                'table'  => \substr($fullTableName, $dot + 1)
             ];
         }
+
+        return [
+                'schema' => null,
+                'table'  => $fullTableName
+            ];
     }
 
     /**
@@ -200,7 +200,7 @@ abstract class AbstractMetadata implements Metadata
      *
      * @param string $tableName
      */
-    public function disablePrimaryKeys($tableName)
+    public function disablePrimaryKeys($tableName): void
     {
         return;
     }
@@ -210,7 +210,7 @@ abstract class AbstractMetadata implements Metadata
      *
      * @param string $tableName
      */
-    public function enablePrimaryKeys($tableName)
+    public function enablePrimaryKeys($tableName): void
     {
         return;
     }

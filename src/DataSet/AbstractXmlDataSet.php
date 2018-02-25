@@ -33,33 +33,34 @@ abstract class AbstractXmlDataSet extends AbstractDataSet
      * Creates a new dataset using the given tables.
      *
      * @param array $tables
+     * @param mixed $xmlFile
      */
     public function __construct($xmlFile)
     {
-        if (!is_file($xmlFile)) {
+        if (!\is_file($xmlFile)) {
             throw new InvalidArgumentException(
                 "Could not find xml file: {$xmlFile}"
             );
         }
 
-        $libxmlErrorReporting = libxml_use_internal_errors(true);
-        $this->xmlFileContents = simplexml_load_file($xmlFile, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);
+        $libxmlErrorReporting  = \libxml_use_internal_errors(true);
+        $this->xmlFileContents = \simplexml_load_file($xmlFile, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);
 
         if (!$this->xmlFileContents) {
             $message = '';
 
-            foreach (libxml_get_errors() as $error) {
-                $message .= print_r($error, true);
+            foreach (\libxml_get_errors() as $error) {
+                $message .= \print_r($error, true);
             }
 
             throw new RuntimeException($message);
         }
 
-        libxml_clear_errors();
-        libxml_use_internal_errors($libxmlErrorReporting);
+        \libxml_clear_errors();
+        \libxml_use_internal_errors($libxmlErrorReporting);
 
         $tableColumns = [];
-        $tableValues = [];
+        $tableValues  = [];
 
         $this->getTableInfo($tableColumns, $tableValues);
         $this->createTables($tableColumns, $tableValues);
@@ -71,7 +72,7 @@ abstract class AbstractXmlDataSet extends AbstractDataSet
      */
     abstract protected function getTableInfo(array &$tableColumns, array &$tableValues);
 
-    protected function createTables(array &$tableColumns, array &$tableValues)
+    protected function createTables(array &$tableColumns, array &$tableValues): void
     {
         foreach ($tableValues as $tableName => $values) {
             $table = $this->getOrCreateTable($tableName, $tableColumns[$tableName]);
@@ -86,13 +87,14 @@ abstract class AbstractXmlDataSet extends AbstractDataSet
      * an empty one is created.
      *
      * @param string $tableName
+     * @param mixed  $tableColumns
      *
      * @return ITable
      */
     protected function getOrCreateTable($tableName, $tableColumns)
     {
         if (empty($this->tables[$tableName])) {
-            $tableMetaData = new DefaultTableMetadata($tableName, $tableColumns);
+            $tableMetaData            = new DefaultTableMetadata($tableName, $tableColumns);
             $this->tables[$tableName] = new DefaultTable($tableMetaData);
         }
 

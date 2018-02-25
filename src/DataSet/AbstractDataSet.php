@@ -15,15 +15,17 @@ namespace PHPUnit\DbUnit\DataSet;
  */
 abstract class AbstractDataSet implements IDataSet
 {
-    /**
-     * Creates an iterator over the tables in the data set. If $reverse is
-     * true a reverse iterator will be returned.
-     *
-     * @param bool $reverse
-     *
-     * @return ITableIterator
-     */
-    abstract protected function createIterator($reverse = false);
+    public function __toString()
+    {
+        $iterator = $this->getIterator();
+
+        $dataSetString = '';
+        foreach ($iterator as $table) {
+            $dataSetString .= $table->__toString();
+        }
+
+        return $dataSetString;
+    }
 
     /**
      * Returns an array of table names contained in the dataset.
@@ -98,11 +100,11 @@ abstract class AbstractDataSet implements IDataSet
      */
     public function matches(IDataSet $other)
     {
-        $thisTableNames = $this->getTableNames();
+        $thisTableNames  = $this->getTableNames();
         $otherTableNames = $other->getTableNames();
 
-        sort($thisTableNames);
-        sort($otherTableNames);
+        \sort($thisTableNames);
+        \sort($otherTableNames);
 
         if ($thisTableNames != $otherTableNames) {
             return false;
@@ -119,15 +121,13 @@ abstract class AbstractDataSet implements IDataSet
         return true;
     }
 
-    public function __toString()
-    {
-        $iterator = $this->getIterator();
-
-        $dataSetString = '';
-        foreach ($iterator as $table) {
-            $dataSetString .= $table->__toString();
-        }
-
-        return $dataSetString;
-    }
+    /**
+     * Creates an iterator over the tables in the data set. If $reverse is
+     * true a reverse iterator will be returned.
+     *
+     * @param bool $reverse
+     *
+     * @return ITableIterator
+     */
+    abstract protected function createIterator($reverse = false);
 }

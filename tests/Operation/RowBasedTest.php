@@ -8,24 +8,25 @@
  * file that was distributed with this source code.
  */
 
-use PHPUnit\DbUnit\Database\DefaultConnection;
 use PHPUnit\DbUnit\Database\Connection;
+use PHPUnit\DbUnit\Database\DefaultConnection;
 use PHPUnit\DbUnit\DataSet\DefaultDataSet;
 use PHPUnit\DbUnit\DataSet\DefaultTable;
 use PHPUnit\DbUnit\DataSet\DefaultTableMetadata;
 use PHPUnit\DbUnit\DataSet\FlatXmlDataSet;
 use PHPUnit\DbUnit\DataSet\ITable;
 use PHPUnit\DbUnit\DataSet\ITableMetadata;
+use PHPUnit\DbUnit\Operation\Exception as OperationException;
 use PHPUnit\DbUnit\Operation\RowBased;
 use PHPUnit\DbUnit\TestCase;
 
-require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'DatabaseTestUtility.php';
+require_once \dirname(__DIR__) . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . 'DatabaseTestUtility.php';
 
 class Extensions_Database_Operation_RowBasedTest extends TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
-        if (!extension_loaded('pdo_sqlite')) {
+        if (!\extension_loaded('pdo_sqlite')) {
             $this->markTestSkipped('PDO/SQLite is required to run this test.');
         }
 
@@ -41,23 +42,29 @@ class Extensions_Database_Operation_RowBasedTest extends TestCase
     {
         $tables = [
             new DefaultTable(
-                new DefaultTableMetadata('table1',
-                    ['table1_id', 'column1', 'column2', 'column3', 'column4'])
+                new DefaultTableMetadata(
+                    'table1',
+                    ['table1_id', 'column1', 'column2', 'column3', 'column4']
+                )
             ),
             new DefaultTable(
-                new DefaultTableMetadata('table2',
-                    ['table2_id', 'column5', 'column6', 'column7', 'column8'])
+                new DefaultTableMetadata(
+                    'table2',
+                    ['table2_id', 'column5', 'column6', 'column7', 'column8']
+                )
             ),
             new DefaultTable(
-                new DefaultTableMetadata('table3',
-                    ['table3_id', 'column9', 'column10', 'column11', 'column12'])
+                new DefaultTableMetadata(
+                    'table3',
+                    ['table3_id', 'column9', 'column10', 'column11', 'column12']
+                )
             ),
         ];
 
         return new DefaultDataSet($tables);
     }
 
-    public function testExecute()
+    public function testExecute(): void
     {
         $connection = $this->getConnection();
         /* @var $connection DefaultConnection */
@@ -67,18 +74,18 @@ class Extensions_Database_Operation_RowBasedTest extends TestCase
 
         $table1->addRow([
             'table1_id' => 1,
-            'column1' => 'foo',
-            'column2' => 42,
-            'column3' => 4.2,
-            'column4' => 'bar'
+            'column1'   => 'foo',
+            'column2'   => 42,
+            'column3'   => 4.2,
+            'column4'   => 'bar'
         ]);
 
         $table1->addRow([
             'table1_id' => 2,
-            'column1' => 'qwerty',
-            'column2' => 23,
-            'column3' => 2.3,
-            'column4' => 'dvorak'
+            'column1'   => 'qwerty',
+            'column2'   => 23,
+            'column3'   => 2.3,
+            'column4'   => 'dvorak'
         ]);
 
         $table2 = new DefaultTable(
@@ -87,10 +94,10 @@ class Extensions_Database_Operation_RowBasedTest extends TestCase
 
         $table2->addRow([
             'table2_id' => 1,
-            'column5' => 'fdyhkn',
-            'column6' => 64,
-            'column7' => 4568.64,
-            'column8' => 'hkladfg'
+            'column5'   => 'fdyhkn',
+            'column6'   => 64,
+            'column7'   => 4568.64,
+            'column8'   => 'hkladfg'
         ]);
 
         $dataSet = new DefaultDataSet([$table1, $table2]);
@@ -139,10 +146,10 @@ class Extensions_Database_Operation_RowBasedTest extends TestCase
         /* @var $mockOperation RowBased */
         $mockOperation->execute($connection, $dataSet);
 
-        $this->assertDataSetsEqual(new FlatXmlDataSet(dirname(__FILE__) . '/../_files/XmlDataSets/RowBasedExecute.xml'), $connection->createDataSet(['table1', 'table2']));
+        $this->assertDataSetsEqual(new FlatXmlDataSet(__DIR__ . '/../_files/XmlDataSets/RowBasedExecute.xml'), $connection->createDataSet(['table1', 'table2']));
     }
 
-    public function testExecuteWithBadQuery()
+    public function testExecuteWithBadQuery(): void
     {
         $mockDatabaseDataSet = $this->createMock(DefaultDataSet::class);
         $mockDatabaseDataSet->expects($this->never())->method('getTableMetaData');
@@ -168,6 +175,44 @@ class Extensions_Database_Operation_RowBasedTest extends TestCase
         );
         $mockOperation->expects($this->never())->method('buildOperationArguments');
         $mockOperation->expects($this->never())->method('buildOperationQuery');
+
+        $mockOperation->execute($mockConnection, $mockDataSet);
+    }
+
+    public function testExecuteHandlesException(): void
+    {
+        $this->expectException(OperationException::class);
+
+        $rowCount          = 1;
+        $mockTableMetaData = $this->createMock(ITableMetadata::class);
+        $mockTableMetaData->expects($this->any())->method('getTableName')->will($this->returnValue('table'));
+        $mockTable = $this->createMock(ITable::class);
+        $mockTable->expects($this->any())->method('getTableMetaData')->will($this->returnValue($mockTableMetaData));
+        $mockTable->expects($this->once())->method('getRowCount')->will($this->returnValue($rowCount));
+
+        $mockDatabaseDataSet = $this->createMock(DefaultDataSet::class);
+        $mockDatabaseDataSet->expects($this->once())->method('getTableMetaData')->will($this->returnValue($mockTableMetaData));
+
+        $mockPdoStatement = $this->createMock(PDOStatement::class);
+        $mockPdoStatement->expects($this->once())->method('execute')->will($this->throwException(new Exception()));
+        $mockPdoConnection = $this->createMock(PDO::class);
+        $mockPdoConnection->expects($this->once())->method('prepare')->will($this->returnValue($mockPdoStatement));
+
+        $mockConnection = $this->createMock(Connection::class);
+        $mockConnection->expects($this->once())->method('createDataSet')->will($this->returnValue($mockDatabaseDataSet));
+        $mockConnection->expects($this->once())->method('getConnection')->will($this->returnValue($mockPdoConnection));
+        $mockConnection->expects($this->never())->method('disablePrimaryKeys');
+        $mockConnection->expects($this->never())->method('enablePrimaryKeys');
+
+        $mockDataSet = $this->createMock(DefaultDataSet::class);
+        $mockDataSet->expects($this->once())->method('getIterator')->will($this->returnValue(new ArrayIterator([$mockTable])));
+
+        $mockOperation = $this->createPartialMock(
+            RowBased::class,
+            ['buildOperationQuery', 'buildOperationArguments']
+        );
+        $mockOperation->expects($this->once())->method('buildOperationQuery')->will($this->returnValue(''));
+        $mockOperation->expects($this->exactly($rowCount))->method('buildOperationArguments')->will($this->returnValue([]));
 
         $mockOperation->execute($mockConnection, $mockDataSet);
     }

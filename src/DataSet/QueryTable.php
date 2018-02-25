@@ -39,12 +39,13 @@ class QueryTable extends AbstractTable
      * @param string     $table_name
      * @param string     $query
      * @param Connection $databaseConnection
+     * @param mixed      $tableName
      */
     public function __construct($tableName, $query, Connection $databaseConnection)
     {
-        $this->query = $query;
+        $this->query              = $query;
         $this->databaseConnection = $databaseConnection;
-        $this->tableName = $tableName;
+        $this->tableName          = $tableName;
     }
 
     /**
@@ -124,15 +125,15 @@ class QueryTable extends AbstractTable
         return parent::matches($other);
     }
 
-    protected function loadData()
+    protected function loadData(): void
     {
         if ($this->data === null) {
             $pdoStatement = $this->databaseConnection->getConnection()->query($this->query);
-            $this->data = $pdoStatement->fetchAll(PDO::FETCH_ASSOC);
+            $this->data   = $pdoStatement->fetchAll(PDO::FETCH_ASSOC);
         }
     }
 
-    protected function createTableMetaData()
+    protected function createTableMetaData(): void
     {
         if ($this->tableMetaData === null) {
             $this->loadData();
@@ -141,16 +142,9 @@ class QueryTable extends AbstractTable
             $columns = [];
             if (isset($this->data[0])) {
                 // get column names from data
-                $columns = array_keys($this->data[0]);
+                $columns = \array_keys($this->data[0]);
             } else {
-                // if no rows found, get column names from database
-                $pdoStatement = $this->databaseConnection->getConnection()->prepare('SELECT column_name FROM information_schema.COLUMNS WHERE table_schema=:schema AND table_name=:table');
-                $pdoStatement->execute([
-                    'table' => $this->tableName,
-                    'schema' => $this->databaseConnection->getSchema()
-                ]);
-
-                $columns = $pdoStatement->fetchAll(PDO::FETCH_COLUMN, 0);
+                $columns = $this->databaseConnection->getMetaData()->getTableColumns($this->tableName);
             }
             // create metadata
             $this->tableMetaData = new DefaultTableMetadata($this->tableName, $columns);

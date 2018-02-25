@@ -46,10 +46,10 @@ class CompositeDataSet extends AbstractDataSet
      *
      * @param IDataSet $dataSet
      */
-    public function addDataSet(IDataSet $dataSet)
+    public function addDataSet(IDataSet $dataSet): void
     {
         foreach ($dataSet->getTableNames() as $tableName) {
-            if (!in_array($tableName, $this->getTableNames())) {
+            if (!\in_array($tableName, $this->getTableNames())) {
                 $this->motherDataSet->addTable($dataSet->getTable($tableName));
             } else {
                 $other = $dataSet->getTable($tableName);
@@ -76,8 +76,8 @@ class CompositeDataSet extends AbstractDataSet
     {
         if ($reverse) {
             return $this->motherDataSet->getReverseIterator();
-        } else {
-            return $this->motherDataSet->getIterator();
         }
+
+        return $this->motherDataSet->getIterator();
     }
 }

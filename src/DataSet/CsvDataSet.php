@@ -52,7 +52,7 @@ class CsvDataSet extends AbstractDataSet
     {
         $this->delimiter = $delimiter;
         $this->enclosure = $enclosure;
-        $this->escape = $escape;
+        $this->escape    = $escape;
     }
 
     /**
@@ -64,17 +64,17 @@ class CsvDataSet extends AbstractDataSet
      * @param string $tableName
      * @param string $csvFile
      */
-    public function addTable($tableName, $csvFile)
+    public function addTable($tableName, $csvFile): void
     {
-        if (!is_file($csvFile)) {
+        if (!\is_file($csvFile)) {
             throw new InvalidArgumentException("Could not find csv file: {$csvFile}");
         }
 
-        if (!is_readable($csvFile)) {
+        if (!\is_readable($csvFile)) {
             throw new InvalidArgumentException("Could not read csv file: {$csvFile}");
         }
 
-        $fh = fopen($csvFile, 'r');
+        $fh      = \fopen($csvFile, 'r');
         $columns = $this->getCsvRow($fh);
 
         if ($columns === false) {
@@ -82,10 +82,10 @@ class CsvDataSet extends AbstractDataSet
         }
 
         $metaData = new DefaultTableMetadata($tableName, $columns);
-        $table = new DefaultTable($metaData);
+        $table    = new DefaultTable($metaData);
 
         while (($row = $this->getCsvRow($fh)) !== false) {
-            $table->addRow(array_combine($columns, $row));
+            $table->addRow(\array_combine($columns, $row));
         }
 
         $this->tables[$tableName] = $table;
@@ -113,10 +113,10 @@ class CsvDataSet extends AbstractDataSet
      */
     protected function getCsvRow($fh)
     {
-        if (version_compare(PHP_VERSION, '5.3.0', '>')) {
-            return fgetcsv($fh, null, $this->delimiter, $this->enclosure, $this->escape);
-        } else {
-            return fgetcsv($fh, null, $this->delimiter, $this->enclosure);
+        if (\version_compare(PHP_VERSION, '5.3.0', '>')) {
+            return \fgetcsv($fh, null, $this->delimiter, $this->enclosure, $this->escape);
         }
+
+        return \fgetcsv($fh, null, $this->delimiter, $this->enclosure);
     }
 }

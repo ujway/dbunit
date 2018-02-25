@@ -101,17 +101,17 @@ class Oci extends AbstractMetadata
      *
      * @param string $tableName
      */
-    protected function loadColumnInfo($tableName)
+    protected function loadColumnInfo($tableName): void
     {
-        $ownerQuery = '';
+        $ownerQuery    = '';
         $conOwnerQuery = '';
-        $tableParts = $this->splitTableName($tableName);
+        $tableParts    = $this->splitTableName($tableName);
 
         $this->columns[$tableName] = [];
-        $this->keys[$tableName] = [];
+        $this->keys[$tableName]    = [];
 
         if (!empty($tableParts['schema'])) {
-            $ownerQuery = " AND OWNER = '{$tableParts['schema']}'";
+            $ownerQuery    = " AND OWNER = '{$tableParts['schema']}'";
             $conOwnerQuery = " AND a.owner = '{$tableParts['schema']}'";
         }
 

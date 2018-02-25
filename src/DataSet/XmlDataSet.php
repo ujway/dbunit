@@ -17,7 +17,7 @@ use PHPUnit\DbUnit\RuntimeException;
  */
 class XmlDataSet extends AbstractXmlDataSet
 {
-    protected function getTableInfo(array &$tableColumns, array &$tableValues)
+    protected function getTableInfo(array &$tableColumns, array &$tableValues): void
     {
         if ($this->xmlFileContents->getName() != 'dataset') {
             throw new RuntimeException('The root element of an xml data set file must be called <dataset>');
@@ -46,7 +46,7 @@ class XmlDataSet extends AbstractXmlDataSet
                     throw new RuntimeException("Missing <column> elements for table $tableName. Add one or more <column> elements to the <table> element.");
                 }
 
-                if (!in_array($columnName, $tableColumns[$tableName])) {
+                if (!\in_array($columnName, $tableColumns[$tableName])) {
                     $tableColumns[$tableName][] = $columnName;
                 }
 
@@ -54,9 +54,9 @@ class XmlDataSet extends AbstractXmlDataSet
             }
 
             foreach ($tableElement->xpath('./row') as $rowElement) {
-                $rowValues = [];
-                $index = 0;
-                $numOfTableInstanceColumns = count($tableInstanceColumns);
+                $rowValues                 = [];
+                $index                     = 0;
+                $numOfTableInstanceColumns = \count($tableInstanceColumns);
 
                 foreach ($rowElement->children() as $columnValue) {
                     if ($index >= $numOfTableInstanceColumns) {
@@ -66,10 +66,12 @@ class XmlDataSet extends AbstractXmlDataSet
                         case 'value':
                             $rowValues[$tableInstanceColumns[$index]] = (string) $columnValue;
                             $index++;
+
                             break;
                         case 'null':
                             $rowValues[$tableInstanceColumns[$index]] = null;
                             $index++;
+
                             break;
                         default:
                             throw new RuntimeException('Unknown element ' . $columnValue->getName() . ' in a row element.');

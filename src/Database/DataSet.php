@@ -56,15 +56,16 @@ class DataSet extends AbstractDataSet
     {
         if ($tableMetaData->getTableName() == '') {
             $e = new RuntimeException('Empty Table Name');
-            echo $e->getTraceAsString();
+            print $e->getTraceAsString();
+
             throw $e;
         }
 
         $columns = $tableMetaData->getColumns();
         if ($databaseConnection) {
-            $columns = array_map([$databaseConnection, 'quoteSchemaObject'], $columns);
+            $columns = \array_map([$databaseConnection, 'quoteSchemaObject'], $columns);
         }
-        $columnList = implode(', ', $columns);
+        $columnList = \implode(', ', $columns);
 
         if ($databaseConnection) {
             $tableName = $databaseConnection->quoteSchemaObject($tableMetaData->getTableName());
@@ -74,28 +75,15 @@ class DataSet extends AbstractDataSet
 
         $primaryKeys = $tableMetaData->getPrimaryKeys();
         if ($databaseConnection) {
-            $primaryKeys = array_map([$databaseConnection, 'quoteSchemaObject'], $primaryKeys);
+            $primaryKeys = \array_map([$databaseConnection, 'quoteSchemaObject'], $primaryKeys);
         }
-        if (count($primaryKeys)) {
-            $orderBy = 'ORDER BY ' . implode(' ASC, ', $primaryKeys) . ' ASC';
+        if (\count($primaryKeys)) {
+            $orderBy = 'ORDER BY ' . \implode(' ASC, ', $primaryKeys) . ' ASC';
         } else {
             $orderBy = '';
         }
 
         return "SELECT {$columnList} FROM {$tableName} {$orderBy}";
-    }
-
-    /**
-     * Creates an iterator over the tables in the data set. If $reverse is
-     * true a reverse iterator will be returned.
-     *
-     * @param bool $reverse
-     *
-     * @return TableIterator
-     */
-    protected function createIterator($reverse = false)
-    {
-        return new TableIterator($this->getTableNames(), $this, $reverse);
     }
 
     /**
@@ -107,7 +95,7 @@ class DataSet extends AbstractDataSet
      */
     public function getTable($tableName)
     {
-        if (!in_array($tableName, $this->getTableNames())) {
+        if (!\in_array($tableName, $this->getTableNames())) {
             throw new InvalidArgumentException("$tableName is not a table in the current database.");
         }
 
@@ -138,5 +126,18 @@ class DataSet extends AbstractDataSet
     public function getTableNames()
     {
         return $this->databaseConnection->getMetaData()->getTableNames();
+    }
+
+    /**
+     * Creates an iterator over the tables in the data set. If $reverse is
+     * true a reverse iterator will be returned.
+     *
+     * @param bool $reverse
+     *
+     * @return TableIterator
+     */
+    protected function createIterator($reverse = false)
+    {
+        return new TableIterator($this->getTableNames(), $this, $reverse);
     }
 }

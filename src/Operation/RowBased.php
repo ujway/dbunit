@@ -33,7 +33,65 @@ abstract class RowBased implements Operation
     protected $iteratorDirection = self::ITERATOR_TYPE_FORWARD;
 
     /**
-     * @return string|bool String containing the query or FALSE if a valid query cannot be constructed
+     * @param Connection $connection
+     * @param IDataSet   $dataSet
+     */
+    public function execute(Connection $connection, IDataSet $dataSet): void
+    {
+        $databaseDataSet = $connection->createDataSet();
+
+        $dsIterator = $this->iteratorDirection == self::ITERATOR_TYPE_REVERSE ? $dataSet->getReverseIterator() : $dataSet->getIterator();
+
+        foreach ($dsIterator as $table) {
+            $rowCount = $table->getRowCount();
+
+            if ($rowCount == 0) {
+                continue;
+            }
+
+            /* @var $table ITable */
+            $databaseTableMetaData = $databaseDataSet->getTableMetaData($table->getTableMetaData()->getTableName());
+            $query                 = $this->buildOperationQuery($databaseTableMetaData, $table, $connection);
+            $disablePrimaryKeys    = $this->disablePrimaryKeys($databaseTableMetaData, $table, $connection);
+
+            if ($query === false) {
+                if ($table->getRowCount() > 0) {
+                    throw new Exception($this->operationName, '', [], $table, 'Rows requested for insert, but no columns provided!');
+                }
+
+                continue;
+            }
+
+            if ($disablePrimaryKeys) {
+                $connection->disablePrimaryKeys($databaseTableMetaData->getTableName());
+            }
+
+            $statement = $connection->getConnection()->prepare($query);
+
+            for ($i = 0; $i < $rowCount; $i++) {
+                $args = $this->buildOperationArguments($databaseTableMetaData, $table, $i);
+
+                try {
+                    $statement->execute($args);
+                } catch (\Exception $e) {
+                    throw new Exception(
+                        $this->operationName,
+                        $query,
+                        $args,
+                        $table,
+                        $e->getMessage()
+                    );
+                }
+            }
+
+            if ($disablePrimaryKeys) {
+                $connection->enablePrimaryKeys($databaseTableMetaData->getTableName());
+            }
+        }
+    }
+
+    /**
+     * @return bool|string String containing the query or FALSE if a valid query cannot be constructed
      */
     abstract protected function buildOperationQuery(ITableMetadata $databaseTableMetaData, ITable $table, Connection $connection);
 
@@ -49,59 +107,6 @@ abstract class RowBased implements Operation
     protected function disablePrimaryKeys(ITableMetadata $databaseTableMetaData, ITable $table, Connection $connection)
     {
         return false;
-    }
-
-    /**
-     * @param Connection $connection
-     * @param IDataSet   $dataSet
-     */
-    public function execute(Connection $connection, IDataSet $dataSet)
-    {
-        $databaseDataSet = $connection->createDataSet();
-
-        $dsIterator = $this->iteratorDirection == self::ITERATOR_TYPE_REVERSE ? $dataSet->getReverseIterator() : $dataSet->getIterator();
-
-        foreach ($dsIterator as $table) {
-            $rowCount = $table->getRowCount();
-
-            if ($rowCount == 0) {
-                continue;
-            }
-
-            /* @var $table ITable */
-            $databaseTableMetaData = $databaseDataSet->getTableMetaData($table->getTableMetaData()->getTableName());
-            $query = $this->buildOperationQuery($databaseTableMetaData, $table, $connection);
-            $disablePrimaryKeys = $this->disablePrimaryKeys($databaseTableMetaData, $table, $connection);
-
-            if ($query === false) {
-                if ($table->getRowCount() > 0) {
-                    throw new Exception($this->operationName, '', [], $table, 'Rows requested for insert, but no columns provided!');
-                }
-                continue;
-            }
-
-            if ($disablePrimaryKeys) {
-                $connection->disablePrimaryKeys($databaseTableMetaData->getTableName());
-            }
-
-            $statement = $connection->getConnection()->prepare($query);
-
-            for ($i = 0; $i < $rowCount; $i++) {
-                $args = $this->buildOperationArguments($databaseTableMetaData, $table, $i);
-
-                try {
-                    $statement->execute($args);
-                } catch (Exception $e) {
-                    throw new Exception(
-                        $this->operationName, $query, $args, $table, $e->getMessage()
-                    );
-                }
-            }
-
-            if ($disablePrimaryKeys) {
-                $connection->enablePrimaryKeys($databaseTableMetaData->getTableName());
-            }
-        }
     }
 
     protected function buildPreparedColumnArray($columns, Connection $connection)

@@ -43,22 +43,17 @@ class ArrayDataSet extends AbstractDataSet
         foreach ($data as $tableName => $rows) {
             $columns = [];
             if (isset($rows[0])) {
-                $columns = array_keys($rows[0]);
+                $columns = \array_keys($rows[0]);
             }
 
             $metaData = new DefaultTableMetadata($tableName, $columns);
-            $table = new DefaultTable($metaData);
+            $table    = new DefaultTable($metaData);
 
             foreach ($rows as $row) {
                 $table->addRow($row);
             }
             $this->tables[$tableName] = $table;
         }
-    }
-
-    protected function createIterator($reverse = false)
-    {
-        return new DefaultTableIterator($this->tables, $reverse);
     }
 
     public function getTable($tableName)
@@ -68,5 +63,10 @@ class ArrayDataSet extends AbstractDataSet
         }
 
         return $this->tables[$tableName];
+    }
+
+    protected function createIterator($reverse = false)
+    {
+        return new DefaultTableIterator($this->tables, $reverse);
     }
 }

@@ -17,7 +17,7 @@ use PHPUnit\DbUnit\RuntimeException;
  */
 class MysqlXmlDataSet extends AbstractXmlDataSet
 {
-    protected function getTableInfo(array &$tableColumns, array &$tableValues)
+    protected function getTableInfo(array &$tableColumns, array &$tableValues): void
     {
         if ($this->xmlFileContents->getName() != 'mysqldump') {
             throw new RuntimeException('The root element of a MySQL XML data set file must be called <mysqldump>');
@@ -48,20 +48,30 @@ class MysqlXmlDataSet extends AbstractXmlDataSet
 
                     $columnName = (string) $columnElement['name'];
 
-                    if (!in_array($columnName, $tableColumns[$tableName])) {
+                    if (!\in_array($columnName, $tableColumns[$tableName])) {
                         $tableColumns[$tableName][] = $columnName;
                     }
                 }
 
                 foreach ($tableColumns[$tableName] as $columnName) {
                     $fields = $rowElement->xpath('./field[@name="' . $columnName . '"]');
+                    if (!isset($fields[0])) {
+                        throw new RuntimeException(
+                            \sprintf(
+                                '%s column doesn\'t exist in current row for table %s',
+                                $columnName,
+                                $tableName
+                            )
+                        );
+                    }
+
                     $column = $fields[0];
-                    $attr = $column->attributes('http://www.w3.org/2001/XMLSchema-instance');
+                    $attr   = $column->attributes('http://www.w3.org/2001/XMLSchema-instance');
 
                     if (isset($attr['type']) && (string) $attr['type'] === 'xs:hexBinary') {
-                        $columnValue = pack('H*', (string) $column);
+                        $columnValue = \pack('H*', (string) $column);
                     } else {
-                        $null = isset($column['nil']) || isset($attr[0]);
+                        $null        = isset($column['nil']) || isset($attr[0]);
                         $columnValue = $null ? null : (string) $column;
                     }
 
@@ -86,7 +96,7 @@ class MysqlXmlDataSet extends AbstractXmlDataSet
 
                 $columnName = (string) (empty($fieldElement['Field']) ? $fieldElement['field'] : $fieldElement['Field']);
 
-                if (!in_array($columnName, $tableColumns[$tableName])) {
+                if (!\in_array($columnName, $tableColumns[$tableName])) {
                     $tableColumns[$tableName][] = $columnName;
                 }
             }

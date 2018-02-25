@@ -49,7 +49,7 @@ class Table implements Specification, DatabaseListConsumer
      *
      * @param array $databases
      */
-    public function setDatabases(array $databases)
+    public function setDatabases(array $databases): void
     {
         $this->databases = $databases;
     }
@@ -63,13 +63,13 @@ class Table implements Specification, DatabaseListConsumer
      */
     public function getDataSet($dataSetSpec)
     {
-        list($dbLabel, $schema, $tables) = explode(':', $dataSetSpec, 3);
-        $databaseInfo = $this->databases[$dbLabel];
+        [$dbLabel, $schema, $tables]     = \explode(':', $dataSetSpec, 3);
+        $databaseInfo                    = $this->databases[$dbLabel];
 
-        $pdoRflc = new ReflectionClass('PDO');
-        $pdo = $pdoRflc->newInstanceArgs(explode('|', $databaseInfo));
+        $pdoRflc      = new ReflectionClass('PDO');
+        $pdo          = $pdoRflc->newInstanceArgs(\explode('|', $databaseInfo));
         $dbConnection = new DefaultConnection($pdo, $schema);
 
-        return !empty($tables) ? $dbConnection->createDataSet(explode(',', $tables)) : $dbConnection->createDataSet();
+        return !empty($tables) ? $dbConnection->createDataSet(\explode(',', $tables)) : $dbConnection->createDataSet();
     }
 }

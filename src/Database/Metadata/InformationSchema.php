@@ -86,10 +86,10 @@ class InformationSchema extends AbstractMetadata
      *
      * @param string $tableName
      */
-    protected function loadColumnInfo($tableName)
+    protected function loadColumnInfo($tableName): void
     {
         $this->columns[$tableName] = [];
-        $this->keys[$tableName] = [];
+        $this->keys[$tableName]    = [];
 
         $columnQuery = '
             SELECT DISTINCT

@@ -21,7 +21,7 @@ class Extensions_Database_DataSet_QueryTableTest extends TestCase
      */
     protected $table;
 
-    public function setUp()
+    public function setUp(): void
     {
         $query = "
             SELECT
@@ -52,32 +52,65 @@ class Extensions_Database_DataSet_QueryTableTest extends TestCase
         ];
     }
 
-    public function testGetTableMetaData()
+    public function testGetEmptyTableMetaData(): void
+    {
+        $metaData = new DefaultTableMetadata('table1', ['table1_id', 'column1', 'column2', 'column3', 'column4']);
+
+        $conn = new PDO('sqlite::memory:');
+        $conn->exec(
+          'CREATE TABLE IF NOT EXISTS table1 (
+            table1_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            column1 VARCHAR(20),
+            column2 INT(10),
+            column3 DECIMAL(6,2),
+            column4 TEXT
+          )'
+        );
+
+        $query = '
+            SELECT *
+            FROM table1
+        ';
+
+        $empty_table = new QueryTable(
+            'table1',
+            $query,
+            new DefaultConnection($conn)
+        );
+
+        $this->assertEquals($metaData, $empty_table->getTableMetaData());
+    }
+
+    public function testGetTableMetaData(): void
     {
         $metaData = new DefaultTableMetadata('table1', ['col1', 'col2', 'col3']);
 
         $this->assertEquals($metaData, $this->table->getTableMetaData());
     }
 
-    public function testGetRowCount()
+    public function testGetRowCount(): void
     {
         $this->assertEquals(2, $this->table->getRowCount());
     }
 
     /**
      * @dataProvider providerTestGetValue
+     *
+     * @param mixed $row
+     * @param mixed $column
+     * @param mixed $value
      */
-    public function testGetValue($row, $column, $value)
+    public function testGetValue($row, $column, $value): void
     {
         $this->assertEquals($value, $this->table->getValue($row, $column));
     }
 
-    public function testGetRow()
+    public function testGetRow(): void
     {
         $this->assertEquals(['col1' => 'value1', 'col2' => 'value2', 'col3' => 'value3'], $this->table->getRow(0));
     }
 
-    public function testAssertEquals()
+    public function testAssertEquals(): void
     {
         $expected_table = new DefaultTable(new DefaultTableMetadata('table1', ['col1', 'col2', 'col3']));
         $expected_table->addRow(['col1' => 'value1', 'col2' => 'value2', 'col3' => 'value3']);
@@ -85,7 +118,7 @@ class Extensions_Database_DataSet_QueryTableTest extends TestCase
         $this->assertTrue($this->table->matches($expected_table));
     }
 
-    public function testAssertEqualsFails()
+    public function testAssertEqualsFails(): void
     {
         $expected_table = new DefaultTable(new DefaultTableMetadata('table1', ['col1', 'col2', 'col3']));
         $expected_table->addRow(['col1' => 'value1', 'col2' => 'value2', 'col3' => 'value3']);
@@ -94,7 +127,7 @@ class Extensions_Database_DataSet_QueryTableTest extends TestCase
         $this->assertFalse($this->table->matches($expected_table));
     }
 
-    public function testAssertRowContains()
+    public function testAssertRowContains(): void
     {
         $this->assertTrue($this->table->assertContainsRow(
             ['col1' => 'value1', 'col2' => 'value2', 'col3' => 'value3']

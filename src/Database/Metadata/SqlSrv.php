@@ -90,7 +90,7 @@ class SqlSrv extends AbstractMetadata
      */
     public function getTablePrimaryKeys($tableName)
     {
-        $query = "EXEC sp_statistics '$tableName'";
+        $query     = "EXEC sp_statistics '$tableName'";
         $statement = $this->pdo->prepare($query);
         $statement->execute();
         $statement->setFetchMode(PDO::FETCH_ASSOC);
@@ -110,7 +110,7 @@ class SqlSrv extends AbstractMetadata
      *
      * @param string $tableName
      */
-    public function disablePrimaryKeys($tableName)
+    public function disablePrimaryKeys($tableName): void
     {
         try {
             $query = "SET IDENTITY_INSERT $tableName ON";
@@ -125,7 +125,7 @@ class SqlSrv extends AbstractMetadata
      *
      * @param string $tableName
      */
-    public function enablePrimaryKeys($tableName)
+    public function enablePrimaryKeys($tableName): void
     {
         try {
             $query = "SET IDENTITY_INSERT $tableName OFF";

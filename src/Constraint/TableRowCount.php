@@ -37,7 +37,17 @@ class TableRowCount extends Constraint
     {
         parent::__construct();
         $this->tableName = $tableName;
-        $this->value = $value;
+        $this->value     = $value;
+    }
+
+    /**
+     * Returns a string representation of the constraint.
+     *
+     * @return string
+     */
+    public function toString(): string
+    {
+        return \sprintf('is equal to expected row count %d', $this->value);
     }
 
     /**
@@ -46,22 +56,12 @@ class TableRowCount extends Constraint
      *
      * This method can be overridden to implement the evaluation algorithm.
      *
-     * @param mixed $other Value or object to evaluate.
+     * @param mixed $other value or object to evaluate
      *
      * @return bool
      */
-    protected function matches($other)
+    protected function matches($other): bool
     {
         return $other == $this->value;
-    }
-
-    /**
-     * Returns a string representation of the constraint.
-     *
-     * @return string
-     */
-    public function toString()
-    {
-        return sprintf('is equal to expected row count %d', $this->value);
     }
 }

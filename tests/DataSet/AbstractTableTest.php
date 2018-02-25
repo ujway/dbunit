@@ -22,16 +22,17 @@ class Extensions_Database_DataSet_AbstractTableTest extends TestCase
      */
     protected $table;
 
-    public function setUp()
+    public function setUp(): void
     {
         $tableMetaData = new DefaultTableMetadata(
-            'table', ['id', 'column1']
+            'table',
+            ['id', 'column1']
         );
 
         $this->table = new DefaultTable($tableMetaData);
 
         $this->table->addRow([
-            'id' => 1,
+            'id'      => 1,
             'column1' => 'randomValue'
         ]);
     }
@@ -41,7 +42,7 @@ class Extensions_Database_DataSet_AbstractTableTest extends TestCase
      * @param bool  $exists
      * @dataProvider providerTableContainsRow
      */
-    public function testTableContainsRow($row, $exists)
+    public function testTableContainsRow($row, $exists): void
     {
         $result = $this->table->assertContainsRow($row);
         $this->assertEquals($exists, $result);
@@ -55,7 +56,7 @@ class Extensions_Database_DataSet_AbstractTableTest extends TestCase
         ];
     }
 
-    public function testMatchesWithNonMatchingMetaData()
+    public function testMatchesWithNonMatchingMetaData(): void
     {
         $tableMetaData = $this->createMock(ITableMetadata::class);
         $otherMetaData = $this->createMock(ITableMetadata::class);
@@ -74,11 +75,11 @@ class Extensions_Database_DataSet_AbstractTableTest extends TestCase
         $this->assertFalse($table->matches($otherTable));
     }
 
-    public function testMatchesWithNonMatchingRowCount()
+    public function testMatchesWithNonMatchingRowCount(): void
     {
         $tableMetaData = $this->createMock(ITableMetadata::class);
         $otherMetaData = $this->createMock(ITableMetadata::class);
-        $otherTable = $this->createMock(ITable::class);
+        $otherTable    = $this->createMock(ITable::class);
 
         $table = $this->getMockBuilder(DefaultTable::class)
                       ->setConstructorArgs([$tableMetaData])
@@ -109,11 +110,11 @@ class Extensions_Database_DataSet_AbstractTableTest extends TestCase
      * @param bool  $matches
      * @dataProvider providerMatchesWithColumnValueComparisons
      */
-    public function testMatchesWithColumnValueComparisons($tableColumnValues, $otherColumnValues, $matches)
+    public function testMatchesWithColumnValueComparisons($tableColumnValues, $otherColumnValues, $matches): void
     {
         $tableMetaData = $this->createMock(ITableMetadata::class);
         $otherMetaData = $this->createMock(ITableMetadata::class);
-        $otherTable = $this->createMock(ITable::class);
+        $otherTable    = $this->createMock(ITable::class);
 
         $table = $this->getMockBuilder(DefaultTable::class)
                       ->setConstructorArgs([$tableMetaData])
@@ -125,11 +126,11 @@ class Extensions_Database_DataSet_AbstractTableTest extends TestCase
             ->will($this->returnValue($otherMetaData));
         $otherTable->expects($this->once())
             ->method('getRowCount')
-            ->will($this->returnValue(count($otherColumnValues)));
+            ->will($this->returnValue(\count($otherColumnValues)));
 
         $tableMetaData->expects($this->once())
             ->method('getColumns')
-            ->will($this->returnValue(array_keys(reset($tableColumnValues))));
+            ->will($this->returnValue(\array_keys(\reset($tableColumnValues))));
         $tableMetaData->expects($this->once())
             ->method('matches')
             ->with($otherMetaData)
@@ -137,7 +138,7 @@ class Extensions_Database_DataSet_AbstractTableTest extends TestCase
 
         $table->expects($this->any())
             ->method('getRowCount')
-            ->will($this->returnValue(count($tableColumnValues)));
+            ->will($this->returnValue(\count($tableColumnValues)));
 
         $tableMap = [];
         $otherMap = [];

@@ -52,16 +52,17 @@ class Exception extends RuntimeException
      * @param string $current_query
      * @param ITable $current_table
      * @param string $error
+     * @param mixed  $current_args
      */
     public function __construct($operation, $current_query, $current_args, $current_table, $error)
     {
-        parent::__construct("{$operation} operation failed on query: {$current_query} using args: " . print_r($current_args, true) . " [{$error}]");
+        parent::__construct("{$operation} operation failed on query: {$current_query} using args: " . \print_r($current_args, true) . " [{$error}]");
 
-        $this->operation = $operation;
+        $this->operation     = $operation;
         $this->preparedQuery = $current_query;
-        $this->preparedArgs = $current_args;
-        $this->table = $current_table;
-        $this->error = $error;
+        $this->preparedArgs  = $current_args;
+        $this->table         = $current_table;
+        $this->error         = $error;
     }
 
     public function getOperation()
